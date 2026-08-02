@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Tip kontrolü
+        run: npm run tipkontrol
+      - name: Testler
+        run: npm test
+      - name: Derleme
+        run: npm run build
+
+  web-guncel:
+    name: tanıtım sayfası motoru güncel mi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # docs/index.html hesap motorunu docs/index.js üzerinden kullanır.
+      # Kaynak değişip derlenmiş kopya commit'lenmezse sayfa eski mantıkla çalışır.
+      - name: docs/index.js kaynakla aynı mı?
+        run: |
+          if ! git diff --exit-code -- docs/index.js; then
+            echo "::error::docs/index.js güncel değil. 'npm run build' çalıştırıp docs/index.js dosyasını commit'leyin."
+            exit 1
+          fi

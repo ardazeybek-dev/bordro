@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>bordro — 2026 maaş hesaplayıcı</title>
+<meta name="description" content="Brütten nete, netten brüte ve işverene maliyet. Türkiye 2026 vergi dilimlerine göre 12 aylık bordro — maaşınızın yıl içinde neden azaldığını gösterir." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>" />
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --plane: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --warning: #fab219;
+    --border: rgba(11, 11, 11, 0.1);
+    --shadow: 0 1px 2px rgba(11, 11, 11, 0.04), 0 8px 24px rgba(11, 11, 11, 0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --plane: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    padding: 0 20px 80px;
+    background: var(--plane);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  .kap { max-width: 940px; margin: 0 auto; }
+
+  header { padding: 44px 0 28px; display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  header .baslik { flex: 1 1 300px; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  h1 .yil {
+    font-size: 13px; font-weight: 600; vertical-align: middle; margin-left: 8px;
+    padding: 3px 8px; border-radius: 999px; background: var(--surface-1);
+    border: 1px solid var(--border); color: var(--text-secondary); letter-spacing: 0;
+  }
+  header p { margin: 0; color: var(--text-secondary); font-size: 15px; max-width: 60ch; }
+  .ust-baglar { display: flex; gap: 8px; align-items: center; }
+  .ikon-dugme {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 36px; padding: 0 12px; border-radius: 9px; cursor: pointer;
+    background: var(--surface-1); border: 1px solid var(--border);
+    color: var(--text-secondary); font: inherit; font-size: 14px; text-decoration: none;
+  }
+  .ikon-dugme:hover { color: var(--text-primary); }
+
+  .sekmeler { display: flex; gap: 4px; padding: 4px; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; }
+  .sekme {
+    flex: 1; padding: 10px 14px; border: 0; border-radius: 9px; cursor: pointer;
+    background: transparent; color: var(--text-secondary);
+    font: inherit; font-size: 15px; font-weight: 500; text-align: center;
+  }
+  .sekme[aria-selected="true"] { background: var(--series-1); color: #fff; font-weight: 600; }
+  .sekme:not([aria-selected="true"]):hover { color: var(--text-primary); }
+
+  .kart {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow);
+  }
+
+  .girdi-satiri { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .alan { flex: 1 1 240px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .tutar-kutu { position: relative; }
+  input[type="text"] {
+    width: 100%; height: 52px; padding: 0 40px 0 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--plane); color: var(--text-primary);
+    font: inherit; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--series-1); outline-offset: 1px; }
+  .tutar-kutu .simge { position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 18px; pointer-events: none; }
+
+  .secim { display: flex; gap: 4px; padding: 4px; background: var(--plane);
+    border: 1px solid var(--border); border-radius: 10px; height: 52px; align-items: center; }
+  .secim button {
+    flex: 1; height: 100%; border: 0; border-radius: 7px; cursor: pointer; padding: 0 14px;
+    background: transparent; color: var(--text-secondary); font: inherit; font-size: 14px; font-weight: 500;
+  }
+  .secim button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary);
+    font-weight: 600; box-shadow: var(--shadow); }
+
+  .anahtar { display: flex; align-items: center; gap: 10px; margin-top: 14px;
+    font-size: 14px; color: var(--text-secondary); cursor: pointer; }
+  .anahtar input { width: 18px; height: 18px; accent-color: var(--series-1); cursor: pointer; }
+
+  .kahraman { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: flex-end; }
+  .kahraman .ana { flex: 1 1 260px; }
+  .kahraman .etiket { font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .kahraman .sayi { font-size: clamp(34px, 6.4vw, 54px); font-weight: 700; letter-spacing: -0.03em;
+    line-height: 1.05; white-space: nowrap; }
+  .kahraman .alt { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+
+  .istatistikler { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 22px; }
+  .ist { padding: 14px; border-radius: 11px; background: var(--plane); border: 1px solid var(--border); }
+  .ist .baslik { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  .ist .deger { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .ist .not { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .uyari {
+    display: flex; gap: 12px; padding: 14px 16px; border-radius: 11px; margin-top: 18px;
+    background: color-mix(in srgb, var(--warning) 12%, var(--surface-1));
+    border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+  }
+  .uyari .simge { flex: none; font-size: 18px; line-height: 1.3; }
+  .uyari p { margin: 0; font-size: 14px; color: var(--text-primary); }
+  .uyari strong { font-variant-numeric: tabular-nums; }
+
+  .kart h2 { font-size: 17px; margin: 0 0 4px; }
+  .kart h2 + .aciklama { margin: 0 0 18px; font-size: 14px; color: var(--text-secondary); }
+
+  .grafik-sarma { position: relative; width: 100%; max-width: 860px; margin: 0 auto;
+    overflow-x: auto; overflow-y: hidden; }
+  svg.grafik { display: block; width: 100%; min-width: 520px; height: auto; touch-action: pan-y; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .eksen-yazi { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .nokta-etiket { fill: var(--text-primary); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .gecis-yazi { fill: var(--text-secondary); font-size: 11px; font-weight: 600; }
+
+  .ipucu {
+    position: absolute; pointer-events: none; opacity: 0; transition: opacity .12s;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px;
+    padding: 9px 11px; box-shadow: 0 4px 16px rgba(0,0,0,.14); font-size: 13px;
+    min-width: 168px; z-index: 5;
+  }
+  .ipucu.acik { opacity: 1; }
+  .ipucu .ay { font-weight: 650; margin-bottom: 5px; }
+  .ipucu .satir { display: flex; justify-content: space-between; gap: 14px; color: var(--text-secondary); }
+  .ipucu .satir span:last-child { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .ipucu .satir.vurgu span:last-child { font-weight: 650; }
+
+  .akis { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .akis-bar { display: flex; height: 46px; border-radius: 9px; overflow: hidden; gap: 2px; background: var(--plane); }
+  .akis-parca { display: flex; align-items: center; justify-content: center; min-width: 3px;
+    color: #fff; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; }
+  .akis-lejant { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; }
+  .akis-lejant div { display: flex; align-items: center; gap: 7px; color: var(--text-secondary); }
+  .akis-lejant .kutu { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .akis-lejant b { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 650; }
+
+  .tablo-sarma { overflow-x: auto; margin: 0 -22px -22px; padding: 0 22px 22px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-secondary); font-size: 12px; font-weight: 600; text-align: right;
+    text-transform: uppercase; letter-spacing: 0.03em; }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr:hover { background: var(--plane); }
+  tbody tr.gecis td { font-weight: 650; }
+  tbody tr.gecis td:first-child::after { content: " ▲"; color: var(--warning); font-size: 11px; }
+  tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--baseline); }
+  .dilim-rozet { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+    font-weight: 650; background: var(--plane); border: 1px solid var(--border); color: var(--text-secondary); }
+
+  details.kaynak { margin-top: 8px; }
+  details.kaynak summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  details.kaynak ul { font-size: 13px; color: var(--text-secondary); padding-left: 20px; }
+  details.kaynak a { color: var(--series-1); }
+
+  footer { margin-top: 28px; font-size: 13px; color: var(--muted); text-align: center; }
+  footer a { color: var(--text-secondary); }
+  .sorumluluk { font-size: 13px; color: var(--text-secondary); margin-top: 14px;
+    padding: 12px 14px; border-radius: 10px; background: var(--plane); border: 1px solid var(--border); }
+
+  .gizli { display: none !important; }
+  @media (max-width: 560px) {
+    header { padding-top: 28px; }
+    .kart { padding: 18px; }
+    .tablo-sarma { margin: 0 -18px -18px; padding: 0 18px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="kap">
+
+<header>
+  <div class="baslik">
+    <h1>bordro<span class="yil">2026</span></h1>
+    <p>Brütten nete, netten brüte ve işverene maliyet. Gelir vergisi yıl boyunca birikimli hesaplandığı için maaşın yıl içinde nasıl değiştiğini de gösterir.</p>
+  </div>
+  <div class="ust-baglar">
+    <button class="ikon-dugme" id="tema" type="button" aria-label="Temayı değiştir">🌗 Tema</button>
+    <a class="ikon-dugme" href="https://github.com/ardazeybek-dev/bordro" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</header>
+
+<div class="sekmeler" role="tablist">
+  <button class="sekme" role="tab" id="sekme-calisan" aria-selected="true" aria-controls="panel-calisan">Çalışan · eline ne geçiyor?</button>
+  <button class="sekme" role="tab" id="sekme-isveren" aria-selected="false" aria-controls="panel-isveren">İşveren · sana kaça mal oluyor?</button>
+</div>
+
+<div class="kart">
+  <div class="girdi-satiri">
+    <div class="alan">
+      <label for="tutar">Maaş tutarı</label>
+      <div class="tutar-kutu">
+        <input type="text" id="tutar" inputmode="decimal" value="75.000" autocomplete="off" spellcheck="false" />
+        <span class="simge">₺</span>
+      </div>
+    </div>
+    <div class="alan" style="flex: 0 1 220px;">
+      <label for="tur-brut">Girdiğim tutar</label>
+      <div class="secim" id="tur">
+        <button type="button" id="tur-brut" aria-pressed="true">Brüt</button>
+        <button type="button" id="tur-net" aria-pressed="false">Net</button>
+      </div>
+    </div>
+  </div>
+  <label class="anahtar gizli" id="indirim-sarma">
+    <input type="checkbox" id="indirim" />
+    5 puanlık SGK indirimi uygula <span style="color: var(--muted)">(teşvikten yararlanan işverenler)</span>
+  </label>
+  <div id="girdi-hata" class="uyari gizli" style="margin-top: 14px;">
+    <span class="simge">⚠️</span><p id="girdi-hata-metin"></p>
+  </div>
+</div>
+
+<!-- ÇALIŞAN -->
+<section id="panel-calisan" role="tabpanel" aria-labelledby="sekme-calisan">
+  <div class="kart">
+    <div class="kahraman">
+      <div class="ana">
+        <div class="etiket">Ocak'ta eline geçen</div>
+        <div class="sayi" id="c-net">—</div>
+        <div class="alt" id="c-net-alt"></div>
+      </div>
+      <div class="ana" style="flex: 0 1 250px;">
+        <div class="etiket">Aralık'ta eline geçen</div>
+        <div class="sayi" style="font-size: clamp(28px, 5vw, 38px);" id="c-aralik">—</div>
+        <div class="alt" id="c-aralik-alt"></div>
+      </div>
+    </div>
+
+    <div class="istatistikler">
+      <div class="ist"><div class="baslik">Yıllık net</div><div class="deger" id="c-yillik-net">—</div><div class="not">12 ay toplamı</div></div>
+      <div class="ist"><div class="baslik">Yıllık kesinti</div><div class="deger" id="c-yillik-kesinti">—</div><div class="not" id="c-kesinti-oran"></div></div>
+      <div class="ist"><div class="baslik">Gelir vergisi</div><div class="deger" id="c-gv">—</div><div class="not">yıllık toplam</div></div>
+      <div class="ist"><div class="baslik">SGK + işsizlik</div><div class="deger" id="c-sgk">—</div><div class="not">yıllık toplam</div></div>
+    </div>
+
+    <div class="uyari gizli" id="c-uyari">
+      <span class="simge">⚠️</span>
+      <p id="c-uyari-metin"></p>
+    </div>
+  </div>
+
+  <div class="kart">
+    <h2>Net maaşın yıl içindeki seyri</h2>
+    <p class="aciklama">Brüt maaş 12 ay boyunca sabit. Değişen tek şey, birikimli matrahın hangi vergi dilimine denk geldiği.</p>
+    <div class="grafik-sarma" id="grafik-sarma">
+      <svg class="grafik" id="grafik" viewBox="0 0 760 300" role="img" aria-labelledby="grafik-baslik"></svg>
+      <div class="ipucu" id="ipucu"></div>
+    </div>
+  </div>
+
+  <div class="kart">
+    <h2>Aylık döküm</h2>
+    <p class="aciklama">Vergi diliminin değiştiği aylar ▲ ile işaretli.</p>
+    <div class="tablo-sarma">
+      <table>
+        <thead>
+          <tr>
+            <th>Ay</th><th>SGK + işsizlik</th><th>Gelir vergisi</th><th>Damga</th><th>Net</th><th>Dilim</th>
+          </tr>
+        </thead>
+        <tbody id="c-tablo"></tbody>
+        <tfoot id="c-tablo-alt"></tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- İŞVEREN -->
+<section id="panel-isveren" role="tabpanel" aria-labelledby="sekme-isveren" class="gizli">
+  <div class="kart">
+    <div class="kahraman">
+      <div class="ana">
+        <div class="etiket">Aylık toplam maliyet</div>
+        <div class="sayi" id="i-maliyet">—</div>
+        <div class="alt" id="i-maliyet-alt"></div>
+      </div>
+      <div class="ana" style="flex: 0 1 270px;">
+        <div class="etiket">Yıllık toplam maliyet</div>
+        <div class="sayi" style="font-size: clamp(28px, 5vw, 38px);" id="i-yillik">—</div>
+        <div class="alt">12 aylık, ikramiye hariç</div>
+      </div>
+    </div>
+
+    <div class="istatistikler">
+      <div class="ist"><div class="baslik">Brüt maaş</div><div class="deger" id="i-brut">—</div><div class="not">sözleşmede yazan</div></div>
+      <div class="ist"><div class="baslik">SGK işveren payı</div><div class="deger" id="i-sgk">—</div><div class="not" id="i-sgk-oran"></div></div>
+      <div class="ist"><div class="baslik">İşsizlik işveren payı</div><div class="deger" id="i-issizlik">—</div><div class="not">%2</div></div>
+      <div class="ist"><div class="baslik">Çalışanın eline geçen</div><div class="deger" id="i-net">—</div><div class="not">Ocak ayı</div></div>
+    </div>
+  </div>
+
+  <div class="kart">
+    <h2>Ödediğin para nereye gidiyor?</h2>
+    <p class="aciklama">Aylık toplam maliyetin dağılımı. Çalışanın eline geçen kısım ile devlete giden kısım.</p>
+    <div class="akis">
+      <div class="akis-bar" id="i-bar"></div>
+      <div class="akis-lejant" id="i-lejant"></div>
+    </div>
+    <div class="tablo-sarma" style="margin-top: 22px;">
+      <table>
+        <thead><tr><th>Kalem</th><th>Tutar</th><th>Maliyetin payı</th></tr></thead>
+        <tbody id="i-tablo"></tbody>
+        <tfoot id="i-tablo-alt"></tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="kart">
+  <details class="kaynak">
+    <summary>Hesaplama nasıl yapılıyor? Kaynaklar ve kapsam</summary>
+    <p style="font-size: 14px; color: var(--text-secondary); margin-top: 12px;">
+      Gelir vergisi, yıl başından itibaren birikimli matrah üzerinden artan oranlı tarifeye göre hesaplanır.
+      Asgari ücrete isabet eden gelir vergisi ve damga vergisi, GVK 23/18 uyarınca tüm ücretlilerden düşülür.
+      Bu istisna asgari ücretlinin kendi birikimli matrahına göre hesaplandığı için yıl içinde büyür — bu yüzden
+      bazı aylarda net ücret hafifçe artabilir.
+    </p>
+    <ul id="kaynaklar"></ul>
+    <p style="font-size: 13px; color: var(--muted);">
+      Kapsam dışı: engellilik indirimi, asgari geçim indirimi (2022'de kaldırıldı), BES kesintisi,
+      özel sigorta primleri, ikramiye ve yan haklar, SGDP'li (emekli) çalışanlar.
+    </p>
+  </details>
+  <div class="sorumluluk">
+    Bu araç bilgi amaçlıdır, resmî bordro yerine geçmez. Sonuçlar açık kaynak kodlu bir motorla üretilir ve
+    testlerle doğrulanır; yine de kesin tutarlar için muhasebecinize danışın.
+  </div>
+</div>
+
+<footer>
+  <p>
+    Açık kaynak · <a href="https://github.com/ardazeybek-dev/bordro" target="_blank" rel="noopener">GitHub</a> ·
+    <a href="https://www.npmjs.com/package/bordro" target="_blank" rel="noopener">npm</a> ·
+    <code>npx bordro 75000</code>
+  </p>
+</footer>
+
+</div>
+
+<script type="module">
+import {
+  AY_ADLARI, yillikHesapla, isvereneMaliyet, nettenBrute, sayiyaCevir,
+  tl, tlSimgeli, yuzde, yilParametreleri, VARSAYILAN_YIL,
+} from "./index.js";
+
+const $ = (id) => document.getElementById(id);
+const P = yilParametreleri(VARSAYILAN_YIL);
+
+/* ---------- durum ---------- */
+const durum = { tutar: 75000, netMi: false, indirim: false, sekme: "calisan" };
+
+/* ---------- tema ---------- */
+$("tema").addEventListener("click", () => {
+  const suAn = document.documentElement.getAttribute("data-theme")
+    ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", suAn === "dark" ? "light" : "dark");
+  ciz();
+});
+
+/* ---------- sekmeler ---------- */
+function sekmeSec(ad) {
+  durum.sekme = ad;
+  $("sekme-calisan").setAttribute("aria-selected", String(ad === "calisan"));
+  $("sekme-isveren").setAttribute("aria-selected", String(ad === "isveren"));
+  $("panel-calisan").classList.toggle("gizli", ad !== "calisan");
+  $("panel-isveren").classList.toggle("gizli", ad !== "isveren");
+  $("indirim-sarma").classList.toggle("gizli", ad !== "isveren");
+  ciz();
+}
+$("sekme-calisan").addEventListener("click", () => sekmeSec("calisan"));
+$("sekme-isveren").addEventListener("click", () => sekmeSec("isveren"));
+
+/* ---------- girdi ---------- */
+$("tutar").addEventListener("input", (e) => {
+  try {
+    const sayi = sayiyaCevir(e.target.value);
+    if (sayi > 0) { durum.tutar = sayi; hataGizle(); ciz(); }
+    else hataGoster("Maaş tutarı sıfırdan büyük olmalı.");
+  } catch {
+    hataGoster("Geçerli bir tutar girin. Örnek: 75.000 veya 75000");
+  }
+});
+$("tur-brut").addEventListener("click", () => turSec(false));
+$("tur-net").addEventListener("click", () => turSec(true));
+function turSec(netMi) {
+  durum.netMi = netMi;
+  $("tur-brut").setAttribute("aria-pressed", String(!netMi));
+  $("tur-net").setAttribute("aria-pressed", String(netMi));
+  ciz();
+}
+$("indirim").addEventListener("change", (e) => { durum.indirim = e.target.checked; ciz(); });
+
+function hataGoster(metin) { $("girdi-hata-metin").textContent = metin; $("girdi-hata").classList.remove("gizli"); }
+function hataGizle() { $("girdi-hata").classList.add("gizli"); }
+
+/* ---------- çizim ---------- */
+let sonSonuc = null;
+
+function ciz() {
+  let brut;
+  try {
+    brut = durum.netMi ? nettenBrute(durum.tutar, 1) : durum.tutar;
+  } catch { hataGoster("Bu tutar için brüt karşılık bulunamadı."); return; }
+
+  const sonuc = yillikHesapla(brut);
+  sonSonuc = sonuc;
+  durum.sekme === "calisan" ? calisaniCiz(sonuc, brut) : isvereniCiz(sonuc, brut);
+}
+
+function calisaniCiz(sonuc, brut) {
+  const ocak = sonuc.aylar[0], aralik = sonuc.aylar[11];
+
+  $("c-net").textContent = tlSimgeli(ocak.net);
+  $("c-net-alt").textContent = durum.netMi
+    ? `Brüt karşılığı ${tlSimgeli(brut)}`
+    : `Brüt ${tlSimgeli(brut)} · kesinti ${tlSimgeli(ocak.kesintiler)}`;
+
+  $("c-aralik").textContent = tlSimgeli(aralik.net);
+  const fark = sonuc.netDegisimi;
+  $("c-aralik-alt").textContent = fark === 0
+    ? "Yıl boyunca değişmiyor"
+    : `Ocak'a göre ${tlSimgeli(Math.abs(fark))} ${fark < 0 ? "daha az" : "daha çok"}`;
+
+  $("c-yillik-net").textContent = tlSimgeli(sonuc.toplam.net);
+  $("c-yillik-kesinti").textContent = tlSimgeli(sonuc.toplam.kesintiler);
+  $("c-kesinti-oran").textContent = `brütün ${yuzde(sonuc.toplam.kesintiler / sonuc.toplam.brut)}'i`;
+  $("c-gv").textContent = tlSimgeli(sonuc.toplam.gelirVergisi);
+  $("c-sgk").textContent = tlSimgeli(sonuc.toplam.sgkIsci + sonuc.toplam.issizlikIsci);
+
+  const uyari = $("c-uyari");
+  if (sonuc.dilimGecisAylari.length > 0 && fark < 0) {
+    const aylar = sonuc.dilimGecisAylari.map((a) => AY_ADLARI[a - 1]).join(" ve ");
+    $("c-uyari-metin").innerHTML =
+      `Vergi dilimin <strong>${aylar}</strong> ayında değişiyor. Hiç zam almasan bile Aralık'ta eline ` +
+      `<strong>${tlSimgeli(Math.abs(fark))}</strong> daha az geçecek — sebebi maaşının düşmesi değil, ` +
+      `birikimli vergi matrahının üst dilime girmesi.`;
+    uyari.classList.remove("gizli");
+  } else {
+    uyari.classList.add("gizli");
+  }
+
+  tabloCiz(sonuc);
+  grafikCiz(sonuc);
+}
+
+function tabloCiz(sonuc) {
+  $("c-tablo").innerHTML = sonuc.aylar.map((a) => `
+    <tr class="${a.dilimAtladi ? "gecis" : ""}">
+      <td>${AY_ADLARI[a.ay - 1]}</td>
+      <td>${tl(a.sgkIsci + a.issizlikIsci)}</td>
+      <td>${tl(a.gelirVergisi)}</td>
+      <td>${tl(a.damgaVergisi)}</td>
+      <td>${tl(a.net)}</td>
+      <td><span class="dilim-rozet">${yuzde(a.vergiDilimiOrani)}</span></td>
+    </tr>`).join("");
+
+  const t = sonuc.toplam;
+  $("c-tablo-alt").innerHTML = `
+    <tr>
+      <td>Yıllık</td>
+      <td>${tl(t.sgkIsci + t.issizlikIsci)}</td>
+      <td>${tl(t.gelirVergisi)}</td>
+      <td>${tl(t.damgaVergisi)}</td>
+      <td>${tl(t.net)}</td>
+      <td></td>
+    </tr>`;
+}
+
+/* ---------- çizgi grafik ---------- */
+const G = { g: 760, y: 300, sol: 74, sag: 22, ust: 34, alt: 44 };
+
+/** Eksen için okunaklı kademe adımı seçer: 1, 2, 2.5 veya 5 × 10^n. */
+function guzelAdim(aralik, hedefKademe) {
+  const ham = aralik / hedefKademe;
+  const buyukluk = Math.pow(10, Math.floor(Math.log10(ham)));
+  const oran = ham / buyukluk;
+  const carpan = oran <= 1 ? 1 : oran <= 2 ? 2 : oran <= 2.5 ? 2.5 : oran <= 5 ? 5 : 10;
+  return carpan * buyukluk;
+}
+
+function grafikCiz(sonuc) {
+  const netler = sonuc.aylar.map((a) => a.net);
+  const enAz = Math.min(...netler), enCok = Math.max(...netler);
+  const pay = Math.max((enCok - enAz) * 0.35, enCok * 0.015);
+
+  // Eksen sınırlarını güzel sayılara oturt: yazan rakam ile çizginin yeri aynı olsun.
+  const adim = guzelAdim(enCok + pay - (enAz - pay), 4);
+  const tabanY = Math.floor((enAz - pay) / adim) * adim;
+  const tavanY = Math.ceil((enCok + pay) / adim) * adim;
+
+  const cizimG = G.g - G.sol - G.sag;
+  const cizimY = G.y - G.ust - G.alt;
+  const x = (i) => G.sol + (cizimG * i) / 11;
+  const y = (v) => G.ust + cizimY - ((v - tabanY) / (tavanY - tabanY)) * cizimY;
+
+  const parcalar = [];
+  parcalar.push(`<title id="grafik-baslik">Aylara göre net maaş — ${tlSimgeli(sonuc.brut)} brüt için</title>`);
+
+  // yatay ızgara + para etiketleri (etiketteki değer çizginin tam yerinde)
+  for (let deger = tabanY; deger <= tavanY + 0.5; deger += adim) {
+    const yy = y(deger);
+    parcalar.push(`<line x1="${G.sol}" y1="${yy}" x2="${G.g - G.sag}" y2="${yy}" stroke="var(--grid)" stroke-width="1" />`);
+    parcalar.push(`<text class="eksen-yazi" x="${G.sol - 10}" y="${yy + 4}" text-anchor="end">${tl(deger)}</text>`);
+  }
+
+  // dilim geçiş işaretleri
+  for (const ay of sonuc.dilimGecisAylari) {
+    const xx = x(ay - 1);
+    parcalar.push(`<line x1="${xx}" y1="${G.ust - 12}" x2="${xx}" y2="${G.y - G.alt}" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.8" />`);
+    const yaslaSaga = ay - 1 > 8;
+    parcalar.push(`<text class="gecis-yazi" x="${xx + (yaslaSaga ? -6 : 6)}" y="${G.ust - 16}" text-anchor="${yaslaSaga ? "end" : "start"}">
+      ${yuzde(sonuc.aylar[ay - 1].vergiDilimiOrani)} dilimi</text>`);
+  }
+
+  // alan + çizgi
+  const noktalar = netler.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  parcalar.push(`<polyline points="${noktalar} ${x(11)},${G.y - G.alt} ${x(0)},${G.y - G.alt}"
+    fill="var(--series-1)" opacity="0.08" stroke="none" />`);
+  parcalar.push(`<polyline points="${noktalar}" fill="none" stroke="var(--series-1)"
+    stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`);
+
+  // noktalar — yüzey halkasıyla
+  netler.forEach((v, i) => {
+    const vurgu = i === 0 || i === 11 || sonuc.aylar[i].dilimAtladi;
+    parcalar.push(`<circle cx="${x(i)}" cy="${y(v)}" r="${vurgu ? 5 : 3.5}"
+      fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" />`);
+  });
+
+  // seçici doğrudan etiketler: sadece ilk ve son
+  parcalar.push(`<text class="nokta-etiket" x="${x(0)}" y="${y(netler[0]) - 13}" text-anchor="start">${tl(netler[0])}</text>`);
+  parcalar.push(`<text class="nokta-etiket" x="${x(11)}" y="${y(netler[11]) - 13}" text-anchor="end">${tl(netler[11])}</text>`);
+
+  // taban çizgisi + ay adları
+  parcalar.push(`<line x1="${G.sol}" y1="${G.y - G.alt}" x2="${G.g - G.sag}" y2="${G.y - G.alt}" stroke="var(--baseline)" stroke-width="1" />`);
+  AY_ADLARI.forEach((ad, i) => {
+    parcalar.push(`<text class="eksen-yazi" x="${x(i)}" y="${G.y - G.alt + 18}" text-anchor="middle">${ad.slice(0, 3)}</text>`);
+  });
+
+  // imleç katmanı
+  parcalar.push(`<line id="imlec" x1="0" y1="${G.ust - 6}" x2="0" y2="${G.y - G.alt}" stroke="var(--muted)" stroke-width="1" opacity="0" />`);
+  parcalar.push(`<circle id="imlec-nokta" r="6" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2.5" opacity="0" />`);
+  parcalar.push(`<rect id="yakala" x="${G.sol - 16}" y="0" width="${cizimG + 32}" height="${G.y}" fill="transparent" style="cursor: crosshair" />`);
+
+  $("grafik").innerHTML = parcalar.join("");
+  ipucuBagla(sonuc, x, y);
+}
+
+function ipucuBagla(sonuc, x, y) {
+  const svg = $("grafik"), sarma = $("grafik-sarma"), ipucu = $("ipucu");
+  const imlec = svg.querySelector("#imlec"), nokta = svg.querySelector("#imlec-nokta");
+
+  const gizle = () => {
+    ipucu.classList.remove("acik");
+    imlec.setAttribute("opacity", "0");
+    nokta.setAttribute("opacity", "0");
+  };
+
+  const goster = (olay) => {
+    const kutu = svg.getBoundingClientRect();
+    const olcek = G.g / kutu.width;
+    const svgX = (olay.clientX - kutu.left) * olcek;
+    const i = Math.max(0, Math.min(11, Math.round(((svgX - G.sol) / (G.g - G.sol - G.sag)) * 11)));
+    const a = sonuc.aylar[i];
+
+    imlec.setAttribute("x1", x(i)); imlec.setAttribute("x2", x(i)); imlec.setAttribute("opacity", "0.5");
+    nokta.setAttribute("cx", x(i)); nokta.setAttribute("cy", y(a.net)); nokta.setAttribute("opacity", "1");
+
+    ipucu.innerHTML = `
+      <div class="ay">${AY_ADLARI[i]}${a.dilimAtladi ? " · dilim değişti" : ""}</div>
+      <div class="satir"><span>SGK + işsizlik</span><span>${tl(a.sgkIsci + a.issizlikIsci)}</span></div>
+      <div class="satir"><span>Gelir vergisi</span><span>${tl(a.gelirVergisi)}</span></div>
+      <div class="satir"><span>Damga vergisi</span><span>${tl(a.damgaVergisi)}</span></div>
+      <div class="satir vurgu"><span>Net</span><span>${tl(a.net)}</span></div>`;
+    ipucu.classList.add("acik");
+
+    const solPx = (x(i) / olcek) - sarma.scrollLeft;
+    const genislik = ipucu.offsetWidth;
+    const hedef = Math.max(4, Math.min(sarma.clientWidth - genislik - 4, solPx + 14));
+    ipucu.style.left = `${hedef}px`;
+    ipucu.style.top = `${Math.max(4, (y(a.net) / olcek) - 20)}px`;
+  };
+
+  const yakala = svg.querySelector("#yakala");
+  yakala.addEventListener("mousemove", goster);
+  yakala.addEventListener("mouseleave", gizle);
+  yakala.addEventListener("touchstart", (e) => { goster(e.touches[0]); }, { passive: true });
+  yakala.addEventListener("touchmove", (e) => { goster(e.touches[0]); }, { passive: true });
+  yakala.addEventListener("touchend", gizle);
+}
+
+/* ---------- işveren ---------- */
+function isvereniCiz(sonuc, brut) {
+  const m = isvereneMaliyet(brut, { besPuanIndirimi: durum.indirim });
+  const ocak = sonuc.aylar[0];
+  const oran = durum.indirim ? P.sgkIsverenIndirimliOrani : P.sgkIsverenOrani;
+
+  $("i-maliyet").textContent = tlSimgeli(m.toplamMaliyet);
+  $("i-maliyet-alt").textContent = `Brüt ${tlSimgeli(brut)} + işveren primleri`;
+  $("i-yillik").textContent = tlSimgeli(m.toplamMaliyet * 12);
+  $("i-brut").textContent = tlSimgeli(brut);
+  $("i-sgk").textContent = tlSimgeli(m.sgkIsveren);
+  $("i-sgk-oran").textContent = yuzde(oran) + (durum.indirim ? " · 5 puan indirimli" : "");
+  $("i-issizlik").textContent = tlSimgeli(m.issizlikIsveren);
+  $("i-net").textContent = tlSimgeli(ocak.net);
+
+  const kalemler = [
+    { ad: "Çalışanın eline geçen", tutar: ocak.net, renk: "var(--series-1)" },
+    { ad: "Çalışandan kesilen vergi ve prim", tutar: ocak.kesintiler, renk: "var(--series-2)" },
+    { ad: "SGK işveren payı", tutar: m.sgkIsveren, renk: "var(--series-3)" },
+    { ad: "İşsizlik işveren payı", tutar: m.issizlikIsveren, renk: "var(--series-4)" },
+  ];
+  const toplam = m.toplamMaliyet;
+
+  $("i-bar").innerHTML = kalemler.map((k) => {
+    const pay = (k.tutar / toplam) * 100;
+    return `<div class="akis-parca" style="flex: ${pay}; background: ${k.renk}"
+      title="${k.ad}: ${tlSimgeli(k.tutar)}">${pay > 11 ? yuzde(k.tutar / toplam) : ""}</div>`;
+  }).join("");
+
+  $("i-lejant").innerHTML = kalemler.map((k) =>
+    `<div><span class="kutu" style="background: ${k.renk}"></span>${k.ad} <b>${tl(k.tutar)}</b></div>`).join("");
+
+  $("i-tablo").innerHTML = kalemler.map((k) => `
+    <tr>
+      <td>${k.ad}</td>
+      <td>${tl(k.tutar)}</td>
+      <td>${yuzde(k.tutar / toplam)}</td>
+    </tr>`).join("");
+
+  $("i-tablo-alt").innerHTML = `
+    <tr><td>Toplam maliyet</td><td>${tl(toplam)}</td><td>%100</td></tr>`;
+}
+
+/* ---------- kaynaklar ---------- */
+$("kaynaklar").innerHTML = P.kaynaklar.map((k) => {
+  const i = k.indexOf("https://");
+  const ad = i > 0 ? k.slice(0, i).replace(/:\s*$/, "") : k;
+  const bag = i > 0 ? k.slice(i) : null;
+  return `<li>${bag ? `<a href="${bag}" target="_blank" rel="noopener">${ad}</a>` : ad}</li>`;
+}).join("");
+
+addEventListener("resize", () => { if (sonSonuc && durum.sekme === "calisan") grafikCiz(sonSonuc); });
+ciz();
+</script>
+</body>
+</html>

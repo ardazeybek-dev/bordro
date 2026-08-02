@@ -1,0 +1,3 @@
+# Depoda her şey LF ile dursun. CI'daki "docs/index.js kaynakla aynı mı?"
+# kontrolü satır sonu farkına takılmasın diye önemli.
+* text=auto eol=lf

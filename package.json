@@ -1,0 +1,61 @@
+{
+  "name": "bordro",
+  "version": "0.1.0",
+  "description": "Türkiye maaş bordrosu hesaplama kütüphanesi — brütten nete, netten brüte, 12 aylık kümülatif gelir vergisi ve işverene maliyet",
+  "keywords": [
+    "bordro",
+    "maas",
+    "brutten-nete",
+    "netten-brute",
+    "gelir-vergisi",
+    "sgk",
+    "asgari-ucret",
+    "turkiye",
+    "payroll",
+    "turkish"
+  ],
+  "license": "MIT",
+  "author": "Arda Zeybek",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardazeybek-dev/bordro.git"
+  },
+  "homepage": "https://ardazeybek-dev.github.io/bordro/",
+  "bugs": {
+    "url": "https://github.com/ardazeybek-dev/bordro/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "bordro": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:izle": "vitest",
+    "tipkontrol": "tsc --noEmit",
+    "dogrula": "npm run tipkontrol && npm run test",
+    "prepublishOnly": "npm run dogrula && npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
