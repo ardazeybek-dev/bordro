@@ -1,84 +1,88 @@
 # bordro
 
 [![CI](https://github.com/ardazeybek-dev/bordro/actions/workflows/ci.yml/badge.svg)](https://github.com/ardazeybek-dev/bordro/actions/workflows/ci.yml)
-[![lisans](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Türkiye maaş bordrosu hesaplama kütüphanesi. Brütten nete, netten brüte, işverene maliyet —
-ve internetteki hesaplayıcıların çoğunun atladığı şey: **12 aylık birikimli vergi.**
+Turkish payroll calculator. Gross to net, net to gross, employer cost — and the
+thing almost every online calculator gets wrong: **cumulative income tax across 12 months.**
 
-**[Tarayıcıda dene →](https://ardazeybek-dev.github.io/bordro/)**
+**[Try it in your browser →](https://ardazeybek-dev.github.io/bordro/)**
 
-Hiçbir kurulum yapmadan denemek için:
+Run it without installing anything:
 
 ```bash
 npx github:ardazeybek-dev/bordro 75000
 ```
 
-Projene eklemek için:
+Add it to your project:
 
 ```bash
 npm install github:ardazeybek-dev/bordro
 ```
 
-## Neden başka bir maaş hesaplayıcı?
+> **Note on language:** the API, CLI output and the web page are in Turkish, since
+> the domain (Turkish tax law) and the audience are Turkish. This README is in English.
 
-Türkiye'de gelir vergisi yıl başından itibaren **birikimli** hesaplanır. Yani brüt maaşın hiç
-değişmese bile, birikimli matrahın üst dilime geçtiği ay elinize daha az para geçer:
+## Why another salary calculator?
+
+In Turkey, income tax is calculated **cumulatively** from the start of the year. Even
+if your gross salary never changes, your take-home pay drops in the month your
+cumulative tax base crosses into a higher bracket:
 
 ```
-Brüt 75.000 ₺ — 2026, hiç zam yok
+Gross 75,000 TRY — 2026, no raise at any point
 
-Ocak      58.080,28 ₺   %15
-Mart      58.017,78 ₺   %20  ← dilim atladı
-Nisan     54.892,77 ₺   %20
-Temmuz    51.981,70 ₺   %27  ← dilim atladı
-Aralık    51.834,05 ₺   %27
+January     58,080.28 TRY   15%
+March       58,017.78 TRY   20%  ← moved up a bracket
+April       54,892.77 TRY   20%
+July        51,981.70 TRY   27%  ← moved up again
+December    51,834.05 TRY   27%
 
-Ocak → Aralık farkı: −6.246,23 ₺
+January → December difference: −6,246.23 TRY
 ```
 
-Tek ay hesaplayan araçlar bu düşüşü göstermez. `bordro` 12 ayın tamamını hesaplar ve vergi
-diliminin hangi ay değiştiğini işaretler.
+Calculators that compute a single month never show this drop. `bordro` computes all
+twelve months and marks exactly when the bracket changes.
 
-## Kullanım
+## Usage
 
-### Kütüphane
+### Library
 
 ```js
 import { hesapla, yillikHesapla, nettenBrute, isvereneMaliyet } from "bordro";
-// kurulum: npm install github:ardazeybek-dev/bordro
+// install: npm install github:ardazeybek-dev/bordro
 
-// Tek ayın bordrosu (varsayılan: Ocak)
+// One month (defaults to January)
 hesapla(75000).net;              // 58080.28
-hesapla(75000, 7).net;           // 51981.70  — Temmuz, üst dilimde
+hesapla(75000, 7).net;           // 51981.70  — July, higher bracket
 
-// 12 aylık döküm
-const yil = yillikHesapla(75000);
-yil.toplam.net;                  // 650008.62
-yil.dilimGecisAylari;            // [3, 7]  — Mart ve Temmuz
-yil.netDegisimi;                 // -6246.23
+// Full year
+const year = yillikHesapla(75000);
+year.toplam.net;                 // 650008.62  — annual net
+year.dilimGecisAylari;           // [3, 7]     — months where the bracket changed
+year.netDegisimi;                // -6246.23   — December net minus January net
 
-// Netten brüte
+// Net to gross
 nettenBrute(50000);              // 63697.48
 
-// İşverene maliyet
-isvereneMaliyet(75000).toplamMaliyet;                        // 92062.50
+// Employer cost
+isvereneMaliyet(75000).toplamMaliyet;                            // 92062.50
 isvereneMaliyet(75000, { besPuanIndirimi: true }).toplamMaliyet; // 88312.50
 ```
 
-### Komut satırı
+### Command line
 
-Kurulum gerektirmez, `npx` doğrudan GitHub'dan çalıştırır:
+No installation needed — `npx` runs it straight from GitHub:
 
 ```bash
-npx github:ardazeybek-dev/bordro 75000            # brütten nete, 12 aylık tablo
-npx github:ardazeybek-dev/bordro --net 50000      # netten brüte
-npx github:ardazeybek-dev/bordro 75000 --isveren  # işverene maliyet
-npx github:ardazeybek-dev/bordro 120000 --ay 7    # sadece Temmuz
-npx github:ardazeybek-dev/bordro 75000 --json     # JSON çıktı
+npx github:ardazeybek-dev/bordro 75000            # gross to net, 12-month table
+npx github:ardazeybek-dev/bordro --net 50000      # net to gross
+npx github:ardazeybek-dev/bordro 75000 --isveren  # employer cost
+npx github:ardazeybek-dev/bordro 120000 --ay 7    # a single month (July)
+npx github:ardazeybek-dev/bordro 75000 --json     # JSON output
 ```
 
-Kurduktan sonra komut kısaca `bordro` olur:
+Once installed, the command is simply `bordro`:
 
 ```bash
 bordro 75000 --isveren
@@ -97,75 +101,78 @@ bordro 75000 --isveren
 
 ## API
 
-| Fonksiyon | Döndürdüğü |
+| Function | Returns |
 |---|---|
-| `hesapla(brut, ay?, secenekler?)` | O ayın tam bordro dökümü (`AylikBordro`) |
-| `yillikHesapla(brut, secenekler?)` | 12 aylık döküm + yıllık toplamlar (`YillikSonuc`) |
-| `brutenNete(brut, ay?, secenekler?)` | Sadece net tutar |
-| `nettenBrute(net, ay?, secenekler?)` | Hedef neti veren brüt ücret |
-| `isvereneMaliyet(brut, secenekler?)` | İşveren primleri + toplam maliyet |
-| `yilParametreleri(yil?)` | O yılın yasal parametreleri |
+| `hesapla(gross, month?, options?)` | Full payroll breakdown for that month (`AylikBordro`) |
+| `yillikHesapla(gross, options?)` | All 12 months plus annual totals (`YillikSonuc`) |
+| `brutenNete(gross, month?, options?)` | Net amount only |
+| `nettenBrute(net, month?, options?)` | Gross salary that yields the given net |
+| `isvereneMaliyet(gross, options?)` | Employer contributions and total cost |
+| `yilParametreleri(year?)` | Statutory parameters for that year |
 
-**Seçenekler:** `{ yil, asgariUcretIstisnasi, besPuanIndirimi }`
+**Options:** `{ yil, asgariUcretIstisnasi, besPuanIndirimi }` — year, minimum-wage tax
+exemption (on by default), and the 5-point employer contribution discount (off by default).
 
-TypeScript tip tanımları pakete dahildir; sıfır çalışma zamanı bağımlılığı vardır.
+TypeScript definitions are included and there are no runtime dependencies.
 
-## 2026 parametreleri
+## 2026 parameters
 
-| Kalem | Değer |
+| Item | Value |
 |---|---|
-| Brüt asgari ücret | 33.030,00 ₺ |
-| Net asgari ücret | 28.075,50 ₺ |
-| SGK primi işçi payı | %14 |
-| İşsizlik sigortası işçi payı | %1 |
-| SGK primi işveren payı | %20,75 *(5 puan indirimli: %15,75)* |
-| İşsizlik sigortası işveren payı | %2 |
-| SGK tavanı | 297.270,00 ₺ |
-| Damga vergisi | binde 7,59 |
-| Gelir vergisi dilimleri | 190.000 → %15 · 400.000 → %20 · 1.500.000 → %27 · 5.300.000 → %35 · üzeri %40 |
+| Gross minimum wage | 33,030.00 TRY |
+| Net minimum wage | 28,075.50 TRY |
+| Social security, employee share | 14% |
+| Unemployment insurance, employee share | 1% |
+| Social security, employer share | 20.75% *(with 5-point discount: 15.75%)* |
+| Unemployment insurance, employer share | 2% |
+| Social security ceiling | 297,270.00 TRY |
+| Stamp tax | 0.759% |
+| Income tax brackets | 190,000 → 15% · 400,000 → 20% · 1,500,000 → 27% · 5,300,000 → 35% · above → 40% |
 
-Parametreler `src/veri/2026.ts` içinde, kaynaklarıyla birlikte tek yerde durur.
-Yeni yıl eklemek için o dosyanın bir kopyasını çıkarıp `YILLAR` kaydına eklemek yeterlidir.
+All parameters live in `src/veri/2026.ts` together with their sources. Supporting a new
+year means copying that file and registering it in the `YILLAR` map.
 
-## Doğruluk
+## Correctness
 
-Bir maaş hesaplayıcısında en büyük risk, sessizce yanlış sayı üretmesidir. Buna karşı
-**testler resmî olarak bilinen sonuçlara sabitlenmiştir**: asgari ücretlinin neti tam
-`28.075,50 ₺` çıkmazsa CI kırmızı yanar. Parametrelerden herhangi biri yanlış girilirse
-bu test onu yakalar.
+The biggest risk in a payroll calculator is producing a wrong number silently. To guard
+against that, **the tests are pinned to officially published figures**: if the net minimum
+wage does not come out to exactly `28,075.50 TRY`, CI fails. Any mistyped parameter is
+caught there.
 
 ```bash
-npm run dogrula   # tip kontrolü + testler
+npm run dogrula   # type-check + tests
 ```
 
-Şu an 40 test çalışıyor: dilim geçişleri, SGK taban/tavan sınırları, netten brüte
-tutarlılığı, istisna mantığı ve hatalı girdiler.
+There are currently 40 tests covering bracket transitions, social security floor and
+ceiling, net-to-gross round-tripping, exemption logic and invalid input.
 
-### Bilinen bir incelik
+### A subtle detail
 
-Asgari ücret istisnası, asgari ücretlinin **kendi birikimli matrahına** göre hesaplanır.
-Asgari ücretlinin yıllık matrahı da (12 × 28.075,50 = 336.906 ₺) ilk dilimi aştığı için
-istisna tutarı yıl içinde büyür. Bu yüzden yüksek maaşlı bir çalışanın neti, o ayda
-**hafifçe artabilir**. Hata değil, mevzuatın doğal sonucudur; `test/kumulatif.test.ts`
-içinde açıkça test edilir.
+The minimum-wage exemption is computed from the **minimum-wage earner's own cumulative
+tax base**. Since that base also exceeds the first bracket over a year
+(12 × 28,075.50 = 336,906 TRY), the exemption itself grows mid-year — which means a
+higher earner's net pay can tick **slightly upward** in that month. This is not a bug but
+a consequence of the legislation, and it is tested explicitly in `test/kumulatif.test.ts`.
 
-## Kapsam dışı
+## Out of scope
 
-Engellilik indirimi, BES kesintisi, özel sigorta primleri, ikramiye ve yan haklar,
-SGDP'li (emekli) çalışanlar, asgari geçim indirimi (2022'de kaldırıldı).
+Disability tax relief, private pension deductions, private insurance premiums, bonuses
+and fringe benefits, employees working under retirement social security status (SGDP),
+and the minimum living allowance (abolished in 2022).
 
-## Kaynaklar
+## Sources
 
-- [Vergi Merkezi — 2026 Pratik Bilgiler](https://vergimerkezi.com.tr/2026-pratik-bilgiler-mali-rehber/)
-- [Kolay İK — 2026 gelir vergisi dilimleri](https://kolayik.com/blog/2026-gelir-vergisi-dilimleri-guncel-tablo)
-- [Kolay İK — 2026 bordro parametreleri](https://kolayik.com/blog/2026-bordro-parametreleri)
-- [CottGroup — 2026 yılı bordrodaki yasal kesintiler](https://www.cottgroup.com/tr/mevzuat/item/2026-yili-icin-bordrodaki-yasal-kesintiler)
+- [Vergi Merkezi — 2026 quick reference](https://vergimerkezi.com.tr/2026-pratik-bilgiler-mali-rehber/)
+- [Kolay İK — 2026 income tax brackets](https://kolayik.com/blog/2026-gelir-vergisi-dilimleri-guncel-tablo)
+- [Kolay İK — 2026 payroll parameters](https://kolayik.com/blog/2026-bordro-parametreleri)
+- [CottGroup — statutory payroll deductions for 2026](https://www.cottgroup.com/tr/mevzuat/item/2026-yili-icin-bordrodaki-yasal-kesintiler)
 
-## Sorumluluk reddi
+## Disclaimer
 
-Bu paket bilgi amaçlıdır ve resmî bordro yerine geçmez. Hesaplamalar açık kaynak kodludur
-ve testlerle doğrulanır; yine de kesin tutarlar için muhasebecinize danışın.
+This package is provided for informational purposes and is not a substitute for an
+official payroll statement. The calculations are open source and covered by tests, but
+please consult your accountant for binding figures.
 
-## Lisans
+## License
 
 [MIT](LICENSE)
