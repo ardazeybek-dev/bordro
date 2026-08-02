@@ -1,16 +1,23 @@
 # bordro
 
 [![CI](https://github.com/ardazeybek-dev/bordro/actions/workflows/ci.yml/badge.svg)](https://github.com/ardazeybek-dev/bordro/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/bordro.svg)](https://www.npmjs.com/package/bordro)
-[![lisans](https://img.shields.io/npm/l/bordro.svg)](LICENSE)
+[![lisans](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
 
 Türkiye maaş bordrosu hesaplama kütüphanesi. Brütten nete, netten brüte, işverene maliyet —
 ve internetteki hesaplayıcıların çoğunun atladığı şey: **12 aylık birikimli vergi.**
 
 **[Tarayıcıda dene →](https://ardazeybek-dev.github.io/bordro/)**
 
+Hiçbir kurulum yapmadan denemek için:
+
 ```bash
-npm install bordro
+npx github:ardazeybek-dev/bordro 75000
+```
+
+Projene eklemek için:
+
+```bash
+npm install github:ardazeybek-dev/bordro
 ```
 
 ## Neden başka bir maaş hesaplayıcı?
@@ -39,6 +46,7 @@ diliminin hangi ay değiştiğini işaretler.
 
 ```js
 import { hesapla, yillikHesapla, nettenBrute, isvereneMaliyet } from "bordro";
+// kurulum: npm install github:ardazeybek-dev/bordro
 
 // Tek ayın bordrosu (varsayılan: Ocak)
 hesapla(75000).net;              // 58080.28
@@ -60,12 +68,20 @@ isvereneMaliyet(75000, { besPuanIndirimi: true }).toplamMaliyet; // 88312.50
 
 ### Komut satırı
 
+Kurulum gerektirmez, `npx` doğrudan GitHub'dan çalıştırır:
+
 ```bash
-npx bordro 75000              # brütten nete, 12 aylık tablo
-npx bordro --net 50000        # netten brüte
-npx bordro 75000 --isveren    # işverene maliyet
-npx bordro 120000 --ay 7      # sadece Temmuz
-npx bordro 75000 --json       # JSON çıktı
+npx github:ardazeybek-dev/bordro 75000            # brütten nete, 12 aylık tablo
+npx github:ardazeybek-dev/bordro --net 50000      # netten brüte
+npx github:ardazeybek-dev/bordro 75000 --isveren  # işverene maliyet
+npx github:ardazeybek-dev/bordro 120000 --ay 7    # sadece Temmuz
+npx github:ardazeybek-dev/bordro 75000 --json     # JSON çıktı
+```
+
+Kurduktan sonra komut kısaca `bordro` olur:
+
+```bash
+bordro 75000 --isveren
 ```
 
 ```

@@ -47,6 +47,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepare": "npm run build",
     "test": "vitest run",
     "test:izle": "vitest",
     "tipkontrol": "tsc --noEmit",
