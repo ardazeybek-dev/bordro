@@ -1,0 +1,40 @@
+name: npm yayını
+
+# Yayını bu bilgisayardan değil, GitHub'ın sunucusundan yapar.
+# Sebep: npm doğrudan yayında her seferinde tek kullanımlık 2FA onayı istiyor.
+#
+# Çalıştırmak için: Actions sekmesi -> "npm yayını" -> Run workflow
+# Ya da bir sürüm (release) yayımlandığında kendiliğinden çalışır.
+#
+# Gereken tek şey: depoda NPM_TOKEN adlı secret
+# (npmjs.com -> Access Tokens -> Generate New Token -> Granular Access Token,
+#  "Read and write" yetkisi, sonra GitHub -> Settings -> Secrets and variables
+#  -> Actions -> New repository secret)
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # provenance (paketin nerede derlendiğinin kanıtı) için
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      # npm publish, prepublishOnly üzerinden tip kontrolü + testleri
+      # zaten çalıştırır; bozuk bir paket yayına çıkamaz.
+      - name: Yayınla
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
