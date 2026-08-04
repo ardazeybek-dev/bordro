@@ -1,88 +1,88 @@
-/** Gelir vergisi tarifesindeki tek bir dilim. */
+/** A single bracket of the income tax schedule. */
 export interface VergiDilimi {
-  /** Dilimin üst sınırı (kümülatif vergi matrahı, TL). Son dilimde `Infinity`. */
+  /** Upper bound of the bracket (cumulative tax base, TRY). `Infinity` on the last one. */
   ustSinir: number;
-  /** Dilime uygulanan oran (0.15 = %15). */
+  /** Rate applied to the bracket (0.15 = 15%). */
   oran: number;
 }
 
-/** Bir yıla ait tüm yasal parametreler. */
+/** Every statutory parameter for a given year. */
 export interface YilParametreleri {
   yil: number;
-  /** Aylık brüt asgari ücret (TL). */
+  /** Monthly gross minimum wage (TRY). */
   asgariUcretBrut: number;
-  /** SGK prime esas kazanç alt sınırı (TL/ay). */
+  /** Lower bound of social security earnings (TRY/month). */
   sgkTaban: number;
-  /** SGK prime esas kazanç üst sınırı — tavan (TL/ay). */
+  /** Upper bound of social security earnings — the ceiling (TRY/month). */
   sgkTavan: number;
-  /** SGK primi işçi payı oranı. */
+  /** Employee share of the social security premium. */
   sgkIsciOrani: number;
-  /** İşsizlik sigortası işçi payı oranı. */
+  /** Employee share of the unemployment insurance premium. */
   issizlikIsciOrani: number;
-  /** SGK primi işveren payı oranı (teşviksiz). */
+  /** Employer share of the social security premium (without the incentive). */
   sgkIsverenOrani: number;
-  /** 5 puanlık indirim uygulandığında SGK işveren payı oranı. */
+  /** Employer social security rate when the 5-point discount applies. */
   sgkIsverenIndirimliOrani: number;
-  /** İşsizlik sigortası işveren payı oranı. */
+  /** Employer share of the unemployment insurance premium. */
   issizlikIsverenOrani: number;
-  /** Ücretlerde damga vergisi oranı (binde 7,59 = 0.00759). */
+  /** Stamp duty rate on wages (0.759 per cent = 0.00759). */
   damgaVergisiOrani: number;
-  /** Ücret gelirlerine uygulanan gelir vergisi tarifesi, artan sırada. */
+  /** Income tax schedule applied to wage income, in ascending order. */
   gelirVergisiDilimleri: readonly VergiDilimi[];
-  /** Rakamların alındığı kaynaklar. */
+  /** Sources the figures were taken from. */
   kaynaklar: readonly string[];
 }
 
-/** Tek bir ayın bordro dökümü. */
+/** The payroll breakdown of a single month. */
 export interface AylikBordro {
-  /** Ay numarası, 1 = Ocak. */
+  /** Month number, 1 = January. */
   ay: number;
   brut: number;
-  /** Prime esas kazanç: brüt maaşın taban/tavan arasına sıkıştırılmış hâli. */
+  /** Social security base: the gross salary clamped between the floor and the ceiling. */
   sgkMatrahi: number;
   sgkIsci: number;
   issizlikIsci: number;
-  /** Gelir vergisi matrahı: brüt − SGK kesintileri. */
+  /** Income tax base: gross minus the social security deductions. */
   gelirVergisiMatrahi: number;
-  /** Yıl başından bu aya kadarki toplam gelir vergisi matrahı. */
+  /** Total income tax base from the start of the year up to this month. */
   kumulatifMatrah: number;
-  /** Tarifeye göre hesaplanan gelir vergisi (istisna düşülmeden). */
+  /** Income tax from the schedule, before the exemption is deducted. */
   hesaplananGelirVergisi: number;
-  /** Asgari ücrete isabet eden ve düşülen gelir vergisi istisnası. */
+  /** The minimum wage income tax exemption that gets deducted. */
   gelirVergisiIstisnasi: number;
-  /** Fiilen kesilen gelir vergisi. */
+  /** Income tax actually withheld. */
   gelirVergisi: number;
   hesaplananDamgaVergisi: number;
   damgaVergisiIstisnasi: number;
   damgaVergisi: number;
-  /** Toplam kesinti. */
+  /** Total deductions. */
   kesintiler: number;
-  /** Ele geçen net ücret. */
+  /** Net pay that reaches the employee. */
   net: number;
-  /** Bu ayda uygulanan en yüksek gelir vergisi oranı (0.15, 0.20 ...). */
+  /** Highest income tax rate applied in this month (0.15, 0.20 ...). */
   vergiDilimiOrani: number;
-  /** Bu ayda bir üst vergi dilimine geçildiyse true. */
+  /** True if this month moved up into a higher tax bracket. */
   dilimAtladi: boolean;
 }
 
-/** İşverene maliyet dökümü (aylık). */
+/** Employer cost breakdown (monthly). */
 export interface IsverenMaliyeti {
   brut: number;
   sgkMatrahi: number;
   sgkIsveren: number;
   issizlikIsveren: number;
-  /** Brüt + işveren primleri. */
+  /** Gross plus the employer premiums. */
   toplamMaliyet: number;
-  /** 5 puanlık indirim uygulandı mı? */
+  /** Was the 5-point discount applied? */
   indirimUygulandi: boolean;
 }
 
-/** Yıllık hesap sonucu. */
+/** Result of the annual calculation. */
 export interface YillikSonuc {
   yil: number;
   brut: number;
   aylar: AylikBordro[];
-  /** Yıllık toplamlar. */
+  /** Annual totals. */
   toplam: {
     brut: number;
     sgkIsci: number;
@@ -92,21 +92,21 @@ export interface YillikSonuc {
     kesintiler: number;
     net: number;
   };
-  /** Yıl içinde vergi diliminin atlandığı aylar (1 = Ocak). */
+  /** Months in which the tax bracket changed (1 = January). */
   dilimGecisAylari: number[];
-  /** Ocak ayı neti ile Aralık ayı neti arasındaki fark (genelde negatif). */
+  /** Difference between December net and January net (usually negative). */
   netDegisimi: number;
 }
 
-/** Hesaplama seçenekleri. */
+/** Calculation options. */
 export interface HesapSecenekleri {
-  /** Hesaplanacak yıl. Varsayılan: desteklenen en güncel yıl. */
+  /** Year to calculate. Defaults to the most recent supported year. */
   yil?: number;
   /**
-   * Asgari ücret gelir/damga vergisi istisnası uygulansın mı?
-   * 2022'den beri tüm ücretlilere uygulanır; varsayılan `true`.
+   * Apply the minimum wage income/stamp duty exemption?
+   * It has applied to every wage earner since 2022; defaults to `true`.
    */
   asgariUcretIstisnasi?: boolean;
-  /** SGK işveren payında 5 puanlık indirim uygulansın mı? Varsayılan `false`. */
+  /** Apply the 5-point discount to the employer social security share? Defaults to `false`. */
   besPuanIndirimi?: boolean;
 }

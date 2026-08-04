@@ -1,4 +1,4 @@
-/** Sayı ve metin biçimlendirme yardımcıları (hem CLI hem web kullanır). */
+/** Number and text formatting helpers, shared by the CLI and the web page. */
 
 const TL_BICIMI = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 2,
@@ -35,7 +35,7 @@ export function yuzde(oran: number): string {
   return `%${(oran * 100).toLocaleString("tr-TR", { maximumFractionDigits: 2 })}`;
 }
 
-/** Kullanıcının yazdığı "75.000,50" / "75000" / "75 000" gibi girdileri sayıya çevirir. */
+/** Parses user input such as "75.000,50" / "75000" / "75 000" into a number. */
 export function sayiyaCevir(girdi: string): number {
   const temiz = girdi.trim().replace(/[\s₺]/g, "").replace(/\./g, "").replace(",", ".");
   const sayi = Number(temiz);

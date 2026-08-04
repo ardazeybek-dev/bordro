@@ -20,8 +20,11 @@ Add it to your project:
 npm install github:ardazeybek-dev/bordro
 ```
 
-> **Note on language:** the API, CLI output and the web page are in Turkish, since
-> the domain (Turkish tax law) and the audience are Turkish. This README is in English.
+> **Note on language:** the documentation, the code comments and the test names are in English.
+> The API names, the CLI output and the web page stay in Turkish on purpose — the domain is
+> Turkish tax law, its vocabulary has no clean English equivalent, and the people who need a
+> `bordro` are reading their payslip in Turkish. Renaming the API would also break every
+> installed copy for no benefit.
 
 ## Why another salary calculator?
 

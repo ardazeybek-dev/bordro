@@ -1,36 +1,35 @@
 import type { YilParametreleri } from "../tipler.js";
 
 /**
- * 2026 yılı bordro parametreleri.
+ * Payroll parameters for 2026.
  *
- * Buradaki her rakam resmî kaynaklara dayanır ve testlerle doğrulanır:
- * `test/asgari-ucret.test.ts` asgari ücretlinin netinin tam olarak
- * 28.075,50 TL çıktığını kontrol eder. Bir rakam yanlış girilirse
- * o test kırılır.
+ * Every figure here comes from an official source and is covered by a test:
+ * `test/asgari-ucret.test.ts` checks that the minimum wage earner's net comes
+ * out at exactly 28,075.50 TRY. Get one number wrong and that test breaks.
  */
 export const YIL_2026: YilParametreleri = {
   yil: 2026,
 
-  // Brüt asgari ücret: 33.030,00 TL/ay (net 28.075,50 TL)
+  // Gross minimum wage: 33,030.00 TRY/month (28,075.50 TRY net)
   asgariUcretBrut: 33030,
 
-  // SGK prime esas kazanç: alt sınır asgari ücret, üst sınır onun 9 katı
+  // Social security earnings: the floor is the minimum wage, the ceiling is 9x that
   sgkTaban: 33030,
   sgkTavan: 297270,
 
-  // İşçiden kesilen primler
+  // Premiums withheld from the employee
   sgkIsciOrani: 0.14,
   issizlikIsciOrani: 0.01,
 
-  // İşverenin ödediği primler (%20,75 = %11 MYÖ + %7,5 GSS + %2,25 KVSK)
+  // Premiums paid by the employer (20.75% = 11% disability/old age/death + 7.5% health + 2.25% short-term)
   sgkIsverenOrani: 0.2075,
-  sgkIsverenIndirimliOrani: 0.1575, // 5510/81-ı: 5 puanlık indirim
+  sgkIsverenIndirimliOrani: 0.1575, // law 5510 art. 81-i: the 5-point discount
   issizlikIsverenOrani: 0.02,
 
-  // Ücretlerde damga vergisi: binde 7,59
+  // Stamp duty on wages: 0.759 per cent
   damgaVergisiOrani: 0.00759,
 
-  // Ücret gelirlerine uygulanan artan oranlı tarife
+  // The progressive schedule applied to wage income
   gelirVergisiDilimleri: [
     { ustSinir: 190_000, oran: 0.15 },
     { ustSinir: 400_000, oran: 0.2 },

@@ -8,15 +8,15 @@ import type {
 } from "./tipler.js";
 import { YIL_2026 } from "./veri/2026.js";
 
-/** Desteklenen yıllar. Yeni yıl eklemek için buraya bir satır eklemek yeterli. */
+/** Supported years. Adding a new year is one line here. */
 export const YILLAR: Record<number, YilParametreleri> = {
   2026: YIL_2026,
 };
 
-/** Parametre dosyası olan en güncel yıl. */
+/** The most recent year that has a parameter file. */
 export const VARSAYILAN_YIL = Math.max(...Object.keys(YILLAR).map(Number));
 
-/** Para tutarlarını kuruşa yuvarlar. Bordroda her kalem 2 haneye yuvarlanır. */
+/** Rounds an amount to the kuruş. Every payroll line is rounded to 2 decimals. */
 export function kurusaYuvarla(tutar: number): number {
   return Math.round((tutar + Number.EPSILON) * 100) / 100;
 }
@@ -31,10 +31,10 @@ export function yilParametreleri(yil: number = VARSAYILAN_YIL): YilParametreleri
 }
 
 /**
- * Verilen kümülatif matrah için tarifeye göre toplam gelir vergisini hesaplar.
+ * Total income tax from the schedule for a given cumulative tax base.
  *
- * Vergi yıl başından itibaren birikimli hesaplandığı için bir ayın vergisi
- * "bu aya kadarki toplam vergi − geçen aya kadarki toplam vergi" ile bulunur.
+ * Tax accumulates from the start of the year, so a single month's tax is
+ * "total tax up to this month − total tax up to last month".
  */
 export function tarifeyeGoreVergi(
   kumulatifMatrah: number,
@@ -51,7 +51,7 @@ export function tarifeyeGoreVergi(
   return vergi;
 }
 
-/** Kümülatif matrahın hangi vergi dilimine denk geldiğini döndürür. */
+/** Returns the tax bracket the cumulative base falls into. */
 export function dilimOrani(kumulatifMatrah: number, dilimler: readonly VergiDilimi[]): number {
   for (const dilim of dilimler) {
     if (kumulatifMatrah <= dilim.ustSinir) return dilim.oran;
@@ -59,17 +59,17 @@ export function dilimOrani(kumulatifMatrah: number, dilimler: readonly VergiDili
   return dilimler[dilimler.length - 1]?.oran ?? 0;
 }
 
-/** Brüt maaşı SGK taban ve tavanı arasına sıkıştırır (prime esas kazanç). */
+/** Clamps the gross salary between the social security floor and ceiling. */
 export function primeEsasKazanc(brut: number, p: YilParametreleri): number {
   return Math.min(Math.max(brut, p.sgkTaban), p.sgkTavan);
 }
 
 /**
- * 12 aylık bordroyu hesaplar.
+ * Calculates the twelve-month payroll.
  *
- * Türkiye'de gelir vergisi yıl boyunca birikimli olduğu için, brüt maaş hiç
- * değişmese bile üst dilime geçildiği ay net ücret düşer. Bu fonksiyon her ayı
- * ayrı ayrı hesaplayarak o düşüşü görünür kılar.
+ * Income tax in Turkey accumulates across the year, so even when the gross
+ * salary never changes the net pay drops in the month the higher bracket is
+ * reached. This function computes every month separately to make that visible.
  */
 export function yillikHesapla(brut: number, secenekler: HesapSecenekleri = {}): YillikSonuc {
   if (!Number.isFinite(brut) || brut <= 0) {
@@ -79,7 +79,7 @@ export function yillikHesapla(brut: number, secenekler: HesapSecenekleri = {}): 
   const p = yilParametreleri(secenekler.yil);
   const istisnaUygula = secenekler.asgariUcretIstisnasi ?? true;
 
-  // Asgari ücretlinin kendi bordrosu: istisna tutarı buradan çıkıyor.
+  // The minimum wage earner's own payroll: this is where the exemption comes from.
   const asgariMatrah = kurusaYuvarla(
     p.asgariUcretBrut * (1 - p.sgkIsciOrani - p.issizlikIsciOrani),
   );
@@ -106,7 +106,7 @@ export function yillikHesapla(brut: number, secenekler: HesapSecenekleri = {}): 
         tarifeyeGoreVergi(oncekiKumulatif, p.gelirVergisiDilimleri),
     );
 
-    // Asgari ücretlinin o ayki vergisi = istisna tavanı.
+    // The minimum wage earner's tax for that month is the exemption ceiling.
     const asgariOncekiKumulatif = asgariKumulatif;
     asgariKumulatif = kurusaYuvarla(asgariKumulatif + asgariMatrah);
     const asgariAylikVergi = kurusaYuvarla(
@@ -177,10 +177,10 @@ export function yillikHesapla(brut: number, secenekler: HesapSecenekleri = {}): 
 }
 
 /**
- * Tek bir ayın bordrosunu hesaplar.
+ * Calculates the payroll for a single month.
  *
- * @param brut Aylık brüt ücret
- * @param ay Yılın kaçıncı ayı (1 = Ocak). Kümülatif vergi yüzünden sonuç aya göre değişir.
+ * @param brut Monthly gross wage
+ * @param ay Month of the year (1 = January). The result depends on the month because tax is cumulative.
  */
 export function hesapla(brut: number, ay = 1, secenekler: HesapSecenekleri = {}): AylikBordro {
   if (!Number.isInteger(ay) || ay < 1 || ay > 12) {
@@ -189,16 +189,16 @@ export function hesapla(brut: number, ay = 1, secenekler: HesapSecenekleri = {})
   return yillikHesapla(brut, secenekler).aylar[ay - 1]!;
 }
 
-/** Brütten nete: sadece ele geçen tutarı döndürür. */
+/** Gross to net: returns only the take-home amount. */
 export function brutenNete(brut: number, ay = 1, secenekler: HesapSecenekleri = {}): number {
   return hesapla(brut, ay, secenekler).net;
 }
 
 /**
- * Netten brüte çevirir.
+ * Converts net to gross.
  *
- * Kesintiler artan oranlı olduğu için tersi doğrudan formülle bulunamaz;
- * ikili arama ile kuruş hassasiyetinde yaklaşılır.
+ * The deductions are progressive, so there is no closed-form inverse; a binary
+ * search converges on the answer to the kuruş.
  */
 export function nettenBrute(net: number, ay = 1, secenekler: HesapSecenekleri = {}): number {
   if (!Number.isFinite(net) || net <= 0) {
@@ -212,19 +212,19 @@ export function nettenBrute(net: number, ay = 1, secenekler: HesapSecenekleri = 
     if (ust > 1e12) throw new Error("Net maaş çok yüksek, brüt karşılığı bulunamadı.");
   }
 
-  // 60 adım, 1e12 aralığı kuruşun çok altına indirmeye fazlasıyla yeter.
+  // 60 steps is far more than enough to narrow a 1e12 range below one kuruş.
   for (let i = 0; i < 60; i++) {
     const orta = (alt + ust) / 2;
     if (brutenNete(orta, ay, secenekler) < net) alt = orta;
     else ust = orta;
   }
 
-  // Kuruşa yuvarlamak neti hedefin bir kuruş altına düşürebilir; bir üst kuruşa çık.
+  // Rounding to the kuruş can land one kuruş under the target; step up if it does.
   const brut = kurusaYuvarla(ust);
   return brutenNete(brut, ay, secenekler) < net ? kurusaYuvarla(brut + 0.01) : brut;
 }
 
-/** İşverene aylık maliyeti hesaplar: brüt + işveren primleri. */
+/** Monthly employer cost: gross plus the employer premiums. */
 export function isvereneMaliyet(
   brut: number,
   secenekler: HesapSecenekleri = {},
