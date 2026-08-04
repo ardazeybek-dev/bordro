@@ -1,14 +1,14 @@
-name: npm yayını
+name: npm publish
 
-# Yayını bu bilgisayardan değil, GitHub'ın sunucusundan yapar.
-# Sebep: npm doğrudan yayında her seferinde tek kullanımlık 2FA onayı istiyor.
+# Publishes from GitHub's runner rather than from a local machine.
+# Why: publishing directly makes npm ask for a one-time 2FA code every time.
 #
-# Çalıştırmak için: Actions sekmesi -> "npm yayını" -> Run workflow
-# Ya da bir sürüm (release) yayımlandığında kendiliğinden çalışır.
+# To run it: Actions tab -> "npm publish" -> Run workflow
+# It also runs by itself when a release is published.
 #
-# Gereken tek şey: depoda NPM_TOKEN adlı secret
+# The only requirement: a repository secret named NPM_TOKEN
 # (npmjs.com -> Access Tokens -> Generate New Token -> Granular Access Token,
-#  "Read and write" yetkisi, sonra GitHub -> Settings -> Secrets and variables
+#  "Read and write" permission, then GitHub -> Settings -> Secrets and variables
 #  -> Actions -> New repository secret)
 
 on:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # provenance (paketin nerede derlendiğinin kanıtı) için
+      id-token: write # needed for provenance (proof of where the package was built)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,9 +32,9 @@ jobs:
 
       - run: npm ci
 
-      # npm publish, prepublishOnly üzerinden tip kontrolü + testleri
-      # zaten çalıştırır; bozuk bir paket yayına çıkamaz.
-      - name: Yayınla
+      # npm publish already runs the type check and the tests through
+      # prepublishOnly, so a broken package cannot reach the registry.
+      - name: Publish
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

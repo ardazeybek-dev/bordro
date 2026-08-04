@@ -143,7 +143,7 @@ wage does not come out to exactly `28,075.50 TRY`, CI fails. Any mistyped parame
 caught there.
 
 ```bash
-npm run dogrula   # type-check + tests
+npm run verify    # type-check + tests
 ```
 
 There are currently 40 tests covering bracket transitions, social security floor and
