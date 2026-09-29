@@ -11,13 +11,13 @@ thing almost every online calculator gets wrong: **cumulative income tax across 
 Run it without installing anything:
 
 ```bash
-npx github:ardazeybek-dev/bordro 75000
+npx bordro 75000
 ```
 
 Add it to your project:
 
 ```bash
-npm install github:ardazeybek-dev/bordro
+npm install bordro
 ```
 
 > **Note on language:** the documentation, the code comments and the test names are in English.
@@ -53,7 +53,7 @@ twelve months and marks exactly when the bracket changes.
 
 ```js
 import { hesapla, yillikHesapla, nettenBrute, isvereneMaliyet } from "bordro";
-// install: npm install github:ardazeybek-dev/bordro
+// install: npm install bordro
 
 // One month (defaults to January)
 hesapla(75000).net;              // 58080.28
@@ -78,11 +78,11 @@ isvereneMaliyet(75000, { besPuanIndirimi: true }).toplamMaliyet; // 88312.50
 No installation needed — `npx` runs it straight from GitHub:
 
 ```bash
-npx github:ardazeybek-dev/bordro 75000            # gross to net, 12-month table
-npx github:ardazeybek-dev/bordro --net 50000      # net to gross
-npx github:ardazeybek-dev/bordro 75000 --isveren  # employer cost
-npx github:ardazeybek-dev/bordro 120000 --ay 7    # a single month (July)
-npx github:ardazeybek-dev/bordro 75000 --json     # JSON output
+npx bordro 75000            # gross to net, 12-month table
+npx bordro --net 50000      # net to gross
+npx bordro 75000 --isveren  # employer cost
+npx bordro 120000 --ay 7    # a single month (July)
+npx bordro 75000 --json     # JSON output
 ```
 
 Once installed, the command is simply `bordro`:
